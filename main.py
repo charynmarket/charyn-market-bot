@@ -57,7 +57,8 @@ async def create_ticket(interaction):
     category = get_ticket_category(guild)
     channel = await guild.create_text_channel(name=f"ticket-{ticket_counter}-{interaction.user.name}", overwrites=overwrites, category=category)
     ticket_data[channel.id] = {"user_id": interaction.user.id, "username": interaction.user.name, "created_at": time.time(), "last_activity": time.time(), "number": ticket_counter}
-    embed = discord.Embed(title=f"🎫 Ticket Baru - {interaction.user.name}", description=f"**Ticket #{ticket_counter}**\n\nHalo {interaction.user.mention}!\n\nSilahkan ketik disini ya:\n**Username Roblox:**\n**Paket yang mau dibeli:**\n\nLalu scan QRIS dibawah & kirim bukti pembayaran disini ya 💙", color=BLUE)
+    # === INI BARIS NICKNAME NYA, UDAH ADA DI SINI ===
+    embed = discord.Embed(title=f"🎫 Ticket Baru - {interaction.user.name}", description=f"**Ticket #{ticket_counter}**\n\nHalo {interaction.user.mention}!\n\nSilahkan ketik disini ya:\n**Nickname Roblox:**\n**Username Roblox:**\n**Paket yang mau dibeli:**\n\nLalu scan QRIS dibawah & kirim bukti pembayaran disini ya 💙", color=BLUE)
     await channel.send(f"{interaction.user.mention} Halo! Selamat datang di CHARYN MARKET! 🌸", embed=embed, view=CloseView())
     embed_qris = discord.Embed(title="💳 Scan QRIS Disini", description="Silahkan scan QRIS ini untuk pembayaran ya 💙\n\nBisa bayar via Bank / GoPay / OVO / DANA / ShopeePay!\nKirim bukti transfer nya disini!", color=BLUE)
     embed_qris.set_image(url=QRIS_URL)
@@ -68,7 +69,6 @@ class CloseView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
     @discord.ui.button(label="🔒 CLOSE TICKET", style=discord.ButtonStyle.danger, custom_id="close_ticket_charyn")
     async def close_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # === SEMUA ORANG BOLEH CLOSE, GAK ADA CEK OWNER LAGI ===
         await interaction.response.defer(ephemeral=True)
         channel = interaction.channel; data = ticket_data.get(channel.id)
         if not data:
