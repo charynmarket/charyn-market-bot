@@ -38,7 +38,6 @@ async def check_inactive():
             if not ch: del ticket_data[channel_id]; continue
             await do_close(ch.guild, ch, data)
 
-# === SALDO PERSIS KAYA SS MIPI STORE, VERSI CHARYN MARKET ===
 def get_saldo_embed(user):
     embed = discord.Embed(color=PINK_SALDO)
     embed.title = "💳 INFORMASI SALDO / TOTAL TRANSAKSI ✨"
@@ -72,12 +71,9 @@ class CloseView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
     @discord.ui.button(label="🔒 CLOSE TICKET", style=discord.ButtonStyle.danger, custom_id="close_ticket_charyn")
     async def close_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        is_owner = interaction.user.id == interaction.guild.owner_id
-        is_admin_perm = interaction.user.guild_permissions.administrator
-        role_names = [r.name.lower() for r in interaction.user.roles]
-        is_admin_role = any(x in role_names for x in ["admin", "owner", "staff", "moderator", "adm"])
-        if not (is_owner or is_admin_perm or is_admin_role):
-            await interaction.response.send_message("❌ Hanya **Admin & Owner** yang bisa menutup ticket ini!", ephemeral=True)
+        # === CUMA OWNER YANG BISA CLOSE, ADMIN / MEMBER GAK BISA ===
+        if interaction.user.id != interaction.guild.owner_id:
+            await interaction.response.send_message("❌ Hanya **Owner** yang bisa menutup ticket ini!", ephemeral=True)
             return
         await interaction.response.defer(ephemeral=True)
         channel = interaction.channel; data = ticket_data.get(channel.id)
