@@ -12,9 +12,8 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 QRIS_URL = "https://raw.githubusercontent.com/charynmarket/charyn-market-bot/main/lv_0_20261112135233.jpeg"
 
-# === WARNA ===
 BLUE = 0x3498db
-PINK_SALDO = 0xff2d95  # Pink persis kaya di SS Aylin Store
+PINK_SALDO = 0xff2d95
 
 ticket_data = {}
 ticket_counter = 0
@@ -39,7 +38,6 @@ async def check_inactive():
             if not ch: del ticket_data[channel_id]; continue
             await do_close(ch.guild, ch, data)
 
-# === FUNGSI EMBED SALDO PERSIS SS ===
 def get_saldo_embed(user):
     embed = discord.Embed(color=PINK_SALDO)
     embed.title = "💳 INFORMASI SALDO / TOTAL TRANSAKSI"
@@ -50,6 +48,21 @@ def get_saldo_embed(user):
     )
     embed.set_footer(text="CHARYN MARKET • CHECK SALDO")
     return embed
+
+async def create_ticket(interaction):
+    global ticket_counter
+    ticket_counter += 1
+    guild = interaction.guild
+    overwrites = {guild.default_role: discord.PermissionOverwrite(read_messages=False), interaction.user: discord.PermissionOverwrite(read_messages=True, send_messages=True), guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)}
+    category = get_ticket_category(guild)
+    channel = await guild.create_text_channel(name=f"ticket-{ticket_counter}-{interaction.user.name}", overwrites=overwrites, category=category)
+    ticket_data[channel.id] = {"user_id": interaction.user.id, "username": interaction.user.name, "created_at": time.time(), "last_activity": time.time(), "number": ticket_counter}
+    embed = discord.Embed(title=f"🎫 Ticket Baru - {interaction.user.name}", description=f"**Ticket #{ticket_counter}**\n\nHalo {interaction.user.mention}!\n\nSilahkan ketik disini ya:\n**Username Roblox:**\n**Paket yang mau dibeli:**\n\nLalu scan QRIS dibawah & kirim bukti pembayaran disini ya 💙", color=BLUE)
+    await channel.send(f"{interaction.user.mention} Halo! Selamat datang di CHARYN MARKET! 🌸", embed=embed, view=CloseView())
+    embed_qris = discord.Embed(title="💳 Scan QRIS Disini", description="Silahkan scan QRIS ini untuk pembayaran ya 💙\n\nBisa bayar via Bank / GoPay / OVO / DANA / ShopeePay!\nKirim bukti transfer nya disini!", color=BLUE)
+    embed_qris.set_image(url=QRIS_URL)
+    await channel.send(embed=embed_qris)
+    return channel
 
 class CloseView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
@@ -70,34 +83,18 @@ class SaldoView(discord.ui.View):
     async def cek_saldo(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_message(embed=get_saldo_embed(interaction.user), ephemeral=True)
 
-class OrderModal(discord.ui.Modal, title="Pesanan Robux - CHARYN MARKET"):
-    username = discord.ui.TextInput(label="Username Roblox", placeholder="UsernameRoblox", required=True)
-    paket = discord.ui.TextInput(label="Paket yang dipilih", placeholder="Contoh: 500 Robux", required=True)
-    pembayaran = discord.ui.TextInput(label="Metode Pembayaran", placeholder="QRIS", default="QRIS", required=True)
-    async def on_submit(self, interaction: discord.Interaction):
-        global ticket_counter
-        ticket_counter += 1
-        guild = interaction.guild
-        overwrites = {guild.default_role: discord.PermissionOverwrite(read_messages=False), interaction.user: discord.PermissionOverwrite(read_messages=True, send_messages=True), guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)}
-        category = get_ticket_category(guild)
-        channel = await guild.create_text_channel(name=f"ticket-{ticket_counter}-{interaction.user.name}", overwrites=overwrites, category=category)
-        ticket_data[channel.id] = {"user_id": interaction.user.id, "username": interaction.user.name, "roblox_username": self.username.value, "pembayaran": self.pembayaran.value, "created_at": time.time(), "last_activity": time.time(), "number": ticket_counter, "paket": self.paket.value}
-        embed = discord.Embed(title=f"🎫 Ticket Baru - {interaction.user.name}", description=f"**Username Roblox:** {self.username.value}\n**Paket:** {self.paket.value}\n**Pembayaran:** {self.pembayaran.value}\n**Ticket #{ticket_counter}**\n\nSilahkan scan QRIS dibawah & kirim bukti pembayaran disini ya 💙", color=BLUE)
-        await channel.send(f"{interaction.user.mention} Halo! Selamat datang di CHARYN MARKET! 🌸", embed=embed, view=CloseView())
-        embed_qris = discord.Embed(title="💳 Scan QRIS Disini", description="Silahkan scan QRIS ini untuk pembayaran ya 💙\n\nBisa bayar via Bank / GoPay / OVO / DANA / ShopeePay!\nKirim bukti transfer nya disini!", color=BLUE)
-        embed_qris.set_image(url=QRIS_URL)
-        await channel.send(embed=embed_qris)
-        go_view = discord.ui.View()
-        go_view.add_item(discord.ui.Button(label="🚀 BUKA TICKET SAYA", style=discord.ButtonStyle.link, url=f"https://discord.com/channels/{guild.id}/{channel.id}"))
-        await interaction.response.send_message(f"✅ Ticket kamu sudah dibuat!\nPencet tombol dibawah untuk langsung masuk ke ticket kamu 👇\n👉 {channel.mention}", view=go_view, ephemeral=True)
-        try: await interaction.user.send(f"✅ Ticket CHARYN MARKET kamu sudah dibuat!\nLangsung klik disini ya: 👉 {channel.mention}\nLink: https://discord.com/channels/{guild.id}/{channel.id}\n\nKirim bukti QRIS kamu disana ya 💙")
-        except: pass
-
 class OrderView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
     @discord.ui.button(label="ORDER ROBUX", style=discord.ButtonStyle.primary, custom_id="order_robux_charyn")
     async def order_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_modal(OrderModal())
+        # LANGSUNG BIKIN TICKET, TANPA FORM!
+        await interaction.response.defer(ephemeral=True)
+        channel = await create_ticket(interaction)
+        go_view = discord.ui.View()
+        go_view.add_item(discord.ui.Button(label="🚀 BUKA TICKET SAYA", style=discord.ButtonStyle.link, url=f"https://discord.com/channels/{interaction.guild.id}/{channel.id}"))
+        await interaction.followup.send(f"✅ Ticket kamu sudah dibuat!\nPencet tombol dibawah untuk langsung masuk ke ticket kamu 👇\n👉 {channel.mention}", view=go_view, ephemeral=True)
+        try: await interaction.user.send(f"✅ Ticket CHARYN MARKET kamu sudah dibuat!\nLangsung klik disini ya: 👉 {channel.mention}\nLink: https://discord.com/channels/{interaction.guild.id}/{channel.id}\n\nKirim bukti QRIS kamu disana ya 💙")
+        except: pass
 
 @bot.event
 async def on_message(message):
@@ -115,7 +112,7 @@ async def on_ready():
 @bot.tree.command(name="ticket", description="Tampilkan panel order CHARYN MARKET")
 async def ticket(interaction: discord.Interaction):
     embed1 = discord.Embed(title="Charyn Market - Order Robux 💙", description="🌸 **ROBUX VIA USERNAME**\nFast Process • Aman • Instan\n\nSyarat top up via username:\n>> SUDAH 18+\n>> SUDAH TERVERIFIKASI 2 LANGKAH", color=BLUE)
-    embed2 = discord.Embed(title="💰 ROBUX FAST SEND - CHARYN MARKET", description="🌸 **Robux Via Username - READY! ✅**\n\n🛒 **Cara Order**\nClick tombol ORDER ROBUX dibawah, isi formulir, lalu scan QRIS dibawah & tunggu admin. Pembayaran **hanya QRIS**.", color=BLUE)
+    embed2 = discord.Embed(title="💰 ROBUX FAST SEND - CHARYN MARKET", description="🌸 **Robux Via Username - READY! ✅**\n\n🛒 **Cara Order**\nClick tombol ORDER ROBUX dibawah, ticket langsung kebuka & ketik pesanan kamu disana. Pembayaran **hanya QRIS**.", color=BLUE)
     embed2.set_image(url=QRIS_URL)
     embed2.set_footer(text="projek By mipi store")
     await interaction.response.send_message(embed=embed1)
