@@ -68,9 +68,8 @@ class CloseView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
     @discord.ui.button(label="🔒 CLOSE TICKET", style=discord.ButtonStyle.danger, custom_id="close_ticket_charyn")
     async def close_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # === SEMUA ORANG BOLEH CLOSE, GAK ADA CEK OWNER LAGI ===
         await interaction.response.defer(ephemeral=True)
-        if interaction.user.id != interaction.guild.owner_id:
-            await interaction.followup.send("❌ Hanya **Owner** yang bisa menutup ticket ini!", ephemeral=True); return
         channel = interaction.channel; data = ticket_data.get(channel.id)
         if not data:
             await interaction.followup.send("Ticket ditutup..."); await channel.delete(); return
@@ -87,7 +86,6 @@ class OrderView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
     @discord.ui.button(label="ORDER ROBUX", style=discord.ButtonStyle.primary, custom_id="order_robux_charyn")
     async def order_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # LANGSUNG BIKIN TICKET, TANPA FORM!
         await interaction.response.defer(ephemeral=True)
         channel = await create_ticket(interaction)
         go_view = discord.ui.View()
