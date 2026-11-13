@@ -52,7 +52,22 @@ def get_saldo_embed(user):
     embed.set_footer(text="Charyn Market • Rafi Store")
     return embed
 
-async def create_ticket(interaction):
+class PesananModal(discord.ui.Modal, title="Pesanan Robux"):
+    nickname = discord.ui.TextInput(label="Nickname Roblox", placeholder="Nickname Roblox kamu", required=True, max_length=50)
+    username = discord.ui.TextInput(label="Username", placeholder="UsernameRoblox", required=True, max_length=50)
+    paket = discord.ui.TextInput(label="Paket yang dipilih", placeholder="Contoh: 500 Robux", required=True, max_length=50)
+    metode = discord.ui.TextInput(label="Metode Pembayaran", placeholder="QRIS", default="QRIS", required=True, max_length=20)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        channel = await create_ticket(interaction, nickname=self.nickname.value, username_roblox=self.username.value, paket=self.paket.value, metode=self.metode.value)
+        go_view = discord.ui.View()
+        go_view.add_item(discord.ui.Button(label="🚀 BUKA TICKET SAYA", style=discord.ButtonStyle.link, url=f"https://discord.com/channels/{interaction.guild.id}/{channel.id}"))
+        await interaction.followup.send(f"✅ Pesanan kamu sudah diterima!\nTicket kamu sudah dibuat 👇\n👉 {channel.mention}", view=go_view, ephemeral=True)
+        try: await interaction.user.send(f"✅ Pesanan CHARYN MARKET kamu sudah diterima!\nNickname: {self.nickname.value}\nUsername: {self.username.value}\nPaket: {self.paket.value}\n\nLangsung klik disini ya: 👉 {channel.mention}\nLink: https://discord.com/channels/{interaction.guild.id}/{channel.id}\n\nKirim bukti QRIS kamu disana ya 💙")
+        except: pass
+
+async def create_ticket(interaction, nickname="-", username_roblox="-", paket="-", metode="QRIS"):
     global ticket_counter
     ticket_counter += 1
     guild = interaction.guild
@@ -60,7 +75,7 @@ async def create_ticket(interaction):
     category = get_ticket_category(guild)
     channel = await guild.create_text_channel(name=f"ticket-{ticket_counter}-{interaction.user.name}", overwrites=overwrites, category=category)
     ticket_data[channel.id] = {"user_id": interaction.user.id, "username": interaction.user.name, "created_at": time.time(), "last_activity": time.time(), "number": ticket_counter}
-    embed = discord.Embed(title=f"🎫 Ticket Baru - {interaction.user.name}", description=f"**Ticket #{ticket_counter}**\n\nHalo {interaction.user.mention}!\n\nSilahkan ketik disini ya:\n**Nickname Roblox:**\n**Username Roblox:**\n**Paket yang mau dibeli:**\n\nLalu scan QRIS dibawah & kirim bukti pembayaran disini ya 💙", color=BLUE)
+    embed = discord.Embed(title=f"🎫 Ticket Baru - {interaction.user.name}", description=f"**Ticket #{ticket_counter}**\n\nHalo {interaction.user.mention}!\n\n**📝 Pesanan Robux:**\n**Nickname Roblox:** {nickname}\n**Username Roblox:** {username_roblox}\n**Paket yang dipilih:** {paket}\n**Metode Pembayaran:** {metode}\n\nLalu scan QRIS dibawah & kirim bukti pembayaran disini ya 💙", color=BLUE)
     await channel.send(f"{interaction.user.mention} Halo! Selamat datang di CHARYN MARKET! 🌸", embed=embed, view=CloseView())
     embed_qris = discord.Embed(title="💳 Scan QRIS Disini", description="Silahkan scan QRIS ini untuk pembayaran ya 💙\n\nBisa bayar via Bank / GoPay / OVO / DANA / ShopeePay!\nKirim bukti transfer nya disini!", color=BLUE)
     embed_qris.set_image(url=QRIS_URL)
@@ -71,10 +86,16 @@ class CloseView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
     @discord.ui.button(label="🔒 CLOSE TICKET", style=discord.ButtonStyle.danger, custom_id="close_ticket_charyn")
     async def close_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # === CUMA OWNER YANG BISA CLOSE, ADMIN / MEMBER GAK BISA ===
-        if interaction.user.id != interaction.guild.owner_id:
-            await interaction.response.send_message("❌ Hanya **Owner** yang bisa menutup ticket ini!", ephemeral=True)
+        # === OWNER + ADMIN BISA CLOSE, MEMBER GAK BISA ===
+        is_owner = interaction.user.id == interaction.guild.owner_id
+        is_admin_perm = interaction.user.guild_permissions.administrator
+        role_names = [r.name.lower() for r in interaction.user.roles]
+        is_admin_role = any(x in role_names for x in ["admin", "owner", "staff", "moderator", "adm"])
+
+        if not (is_owner or is_admin_perm or is_admin_role):
+            await interaction.response.send_message("❌ Hanya **Admin & Owner** yang bisa menutup ticket ini!", ephemeral=True)
             return
+
         await interaction.response.defer(ephemeral=True)
         channel = interaction.channel; data = ticket_data.get(channel.id)
         if not data:
@@ -92,13 +113,7 @@ class OrderView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
     @discord.ui.button(label="ORDER ROBUX", style=discord.ButtonStyle.primary, custom_id="order_robux_charyn")
     async def order_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer(ephemeral=True)
-        channel = await create_ticket(interaction)
-        go_view = discord.ui.View()
-        go_view.add_item(discord.ui.Button(label="🚀 BUKA TICKET SAYA", style=discord.ButtonStyle.link, url=f"https://discord.com/channels/{interaction.guild.id}/{channel.id}"))
-        await interaction.followup.send(f"✅ Ticket kamu sudah dibuat!\nPencet tombol dibawah untuk langsung masuk ke ticket kamu 👇\n👉 {channel.mention}", view=go_view, ephemeral=True)
-        try: await interaction.user.send(f"✅ Ticket CHARYN MARKET kamu sudah dibuat!\nLangsung klik disini ya: 👉 {channel.mention}\nLink: https://discord.com/channels/{interaction.guild.id}/{channel.id}\n\nKirim bukti QRIS kamu disana ya 💙")
-        except: pass
+        await interaction.response.send_modal(PesananModal())
 
 @bot.event
 async def on_message(message):
