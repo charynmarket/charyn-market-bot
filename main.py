@@ -12,6 +12,9 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 QRIS_URL = "https://raw.githubusercontent.com/charynmarket/charyn-market-bot/main/lv_0_20261112135233.jpeg"
 
+# === WARNA BIRU ===
+BLUE = 0x3498db
+
 ticket_data = {}
 ticket_counter = 0
 
@@ -52,8 +55,8 @@ class SaldoView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
     @discord.ui.button(label="💳 CEK SALDO SAYA", style=discord.ButtonStyle.primary, custom_id="cek_saldo_charyn")
     async def cek_saldo(self, interaction: discord.Interaction, button: discord.ui.Button):
-        embed = discord.Embed(color=0xff1493)
-        embed.description = f"💳 **INFORMASI SALDO / TOTAL TRANSAKSI** ✨\n\nHalo {interaction.user.mention},\n\nSilahkan chat Owner untuk cek total belanja kamu di **CHARYN MARKET** ya 💗\n\nCHARYN MARKET • CHECK SALDO"
+        embed = discord.Embed(color=BLUE)
+        embed.description = f"💳 **INFORMASI SALDO / TOTAL TRANSAKSI** ✨\n\nHalo {interaction.user.mention},\n\nSilahkan chat Owner untuk cek total belanja kamu di **CHARYN MARKET** ya 💙\n\nCHARYN MARKET • CHECK SALDO"
         embed.set_footer(text="Charyn Market")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -69,15 +72,15 @@ class OrderModal(discord.ui.Modal, title="Pesanan Robux - CHARYN MARKET"):
         category = get_ticket_category(guild)
         channel = await guild.create_text_channel(name=f"ticket-{ticket_counter}-{interaction.user.name}", overwrites=overwrites, category=category)
         ticket_data[channel.id] = {"user_id": interaction.user.id, "username": interaction.user.name, "roblox_username": self.username.value, "pembayaran": self.pembayaran.value, "created_at": time.time(), "last_activity": time.time(), "number": ticket_counter, "paket": self.paket.value}
-        embed = discord.Embed(title=f"🎫 Ticket Baru - {interaction.user.name}", description=f"**Username Roblox:** {self.username.value}\n**Paket:** {self.paket.value}\n**Pembayaran:** {self.pembayaran.value}\n**Ticket #{ticket_counter}**\n\nSilahkan scan QRIS dibawah & kirim bukti pembayaran disini ya 💗", color=0xff69b4)
+        embed = discord.Embed(title=f"🎫 Ticket Baru - {interaction.user.name}", description=f"**Username Roblox:** {self.username.value}\n**Paket:** {self.paket.value}\n**Pembayaran:** {self.pembayaran.value}\n**Ticket #{ticket_counter}**\n\nSilahkan scan QRIS dibawah & kirim bukti pembayaran disini ya 💙", color=BLUE)
         await channel.send(f"{interaction.user.mention} Halo! Selamat datang di CHARYN MARKET! 🌸", embed=embed, view=CloseView())
-        embed_qris = discord.Embed(title="💳 Scan QRIS Disini", description="Silahkan scan QRIS ini untuk pembayaran ya 💗\n\nBisa bayar via Bank / GoPay / OVO / DANA / ShopeePay!\nKirim bukti transfer nya disini!", color=0xff69b4)
+        embed_qris = discord.Embed(title="💳 Scan QRIS Disini", description="Silahkan scan QRIS ini untuk pembayaran ya 💙\n\nBisa bayar via Bank / GoPay / OVO / DANA / ShopeePay!\nKirim bukti transfer nya disini!", color=BLUE)
         embed_qris.set_image(url=QRIS_URL)
         await channel.send(embed=embed_qris)
         go_view = discord.ui.View()
         go_view.add_item(discord.ui.Button(label="🚀 BUKA TICKET SAYA", style=discord.ButtonStyle.link, url=f"https://discord.com/channels/{guild.id}/{channel.id}"))
         await interaction.response.send_message(f"✅ Ticket kamu sudah dibuat!\nPencet tombol dibawah untuk langsung masuk ke ticket kamu 👇\n👉 {channel.mention}", view=go_view, ephemeral=True)
-        try: await interaction.user.send(f"✅ Ticket CHARYN MARKET kamu sudah dibuat!\nLangsung klik disini ya: 👉 {channel.mention}\nLink: https://discord.com/channels/{guild.id}/{channel.id}\n\nKirim bukti QRIS kamu disana ya 💗")
+        try: await interaction.user.send(f"✅ Ticket CHARYN MARKET kamu sudah dibuat!\nLangsung klik disini ya: 👉 {channel.mention}\nLink: https://discord.com/channels/{guild.id}/{channel.id}\n\nKirim bukti QRIS kamu disana ya 💙")
         except: pass
 
 class OrderView(discord.ui.View):
@@ -101,18 +104,17 @@ async def on_ready():
 
 @bot.tree.command(name="ticket", description="Tampilkan panel order CHARYN MARKET")
 async def ticket(interaction: discord.Interaction):
-    embed1 = discord.Embed(title="Charyn Market - Order Robux 💗", description="🌸 **ROBUX VIA USERNAME**\nFast Process • Aman • Instan\n\nSyarat top up via username:\n>> SUDAH 18+\n>> SUDAH TERVERIFIKASI 2 LANGKAH", color=0xff69b4)
-    embed2 = discord.Embed(title="💰 ROBUX FAST SEND - CHARYN MARKET", description="🌸 **Robux Via Username - READY! ✅**\n\n🛒 **Cara Order**\nClick tombol ORDER ROBUX dibawah, isi formulir, lalu scan QRIS dibawah & tunggu admin. Pembayaran **hanya QRIS**.", color=0xff69b4)
+    embed1 = discord.Embed(title="Charyn Market - Order Robux 💙", description="🌸 **ROBUX VIA USERNAME**\nFast Process • Aman • Instan\n\nSyarat top up via username:\n>> SUDAH 18+\n>> SUDAH TERVERIFIKASI 2 LANGKAH", color=BLUE)
+    embed2 = discord.Embed(title="💰 ROBUX FAST SEND - CHARYN MARKET", description="🌸 **Robux Via Username - READY! ✅**\n\n🛒 **Cara Order**\nClick tombol ORDER ROBUX dibawah, isi formulir, lalu scan QRIS dibawah & tunggu admin. Pembayaran **hanya QRIS**.", color=BLUE)
     embed2.set_image(url=QRIS_URL)
-    # === CUMA INI YANG DIGANTI ===
     embed2.set_footer(text="projek By mipi store")
     await interaction.response.send_message(embed=embed1)
     await interaction.followup.send(embed=embed2, view=OrderView())
 
 @bot.tree.command(name="saldo", description="Cek saldo kamu di CHARYN MARKET")
 async def saldo_slash(interaction: discord.Interaction):
-    embed = discord.Embed(color=0xff1493)
-    embed.description = f"💳 **INFORMASI SALDO / TOTAL TRANSAKSI** ✨\n\nHalo {interaction.user.mention},\n\nSilahkan chat Owner untuk cek total belanja kamu di **CHARYN MARKET** ya 💗\n\nCHARYN MARKET • CHECK SALDO"
+    embed = discord.Embed(color=BLUE)
+    embed.description = f"💳 **INFORMASI SALDO / TOTAL TRANSAKSI** ✨\n\nHalo {interaction.user.mention},\n\nSilahkan chat Owner untuk cek total belanja kamu di **CHARYN MARKET** ya 💙\n\nCHARYN MARKET • CHECK SALDO"
     embed.set_footer(text="Charyn Market")
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -120,7 +122,7 @@ async def saldo_slash(interaction: discord.Interaction):
 async def setup_saldo(interaction: discord.Interaction):
     if interaction.user.id != interaction.guild.owner_id:
         await interaction.response.send_message("❌ Hanya Owner!", ephemeral=True); return
-    embed = discord.Embed(title="💳 CEK SALDO - CHARYN MARKET", description="🌸 **MAU TAU UDAH HABIS BERAPA DI CHARYN MARKET?**\n\nPencet tombol **💳 CEK SALDO SAYA** dibawah!", color=0xff69b4)
+    embed = discord.Embed(title="💳 CEK SALDO - CHARYN MARKET", description="🌸 **MAU TAU UDAH HABIS BERAPA DI CHARYN MARKET?**\n\nPencet tombol **💳 CEK SALDO SAYA** dibawah!", color=BLUE)
     embed.set_footer(text="Charyn Market • Check Saldo")
     await interaction.response.send_message(embed=embed, view=SaldoView())
 
