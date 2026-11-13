@@ -104,8 +104,8 @@ async def ticket(interaction: discord.Interaction):
     embed1 = discord.Embed(title="Charyn Market - Order Robux 💗", description="🌸 **ROBUX VIA USERNAME**\nFast Process • Aman • Instan\n\nSyarat top up via username:\n>> SUDAH 18+\n>> SUDAH TERVERIFIKASI 2 LANGKAH", color=0xff69b4)
     embed2 = discord.Embed(title="💰 ROBUX FAST SEND - CHARYN MARKET", description="🌸 **Robux Via Username - READY! ✅**\n\n🛒 **Cara Order**\nClick tombol ORDER ROBUX dibawah, isi formulir, lalu scan QRIS dibawah & tunggu admin. Pembayaran **hanya QRIS**.", color=0xff69b4)
     embed2.set_image(url=QRIS_URL)
-    # === CUMA INI YANG DIGANTI JADI by MIPI STORE ===
-    embed2.set_footer(text="by MIPI STORE")
+    # === CUMA INI YANG DIGANTI ===
+    embed2.set_footer(text="projek By mipi store")
     await interaction.response.send_message(embed=embed1)
     await interaction.followup.send(embed=embed2, view=OrderView())
 
