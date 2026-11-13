@@ -38,15 +38,19 @@ async def check_inactive():
             if not ch: del ticket_data[channel_id]; continue
             await do_close(ch.guild, ch, data)
 
+# === SALDO PERSIS KAYA SS MIPI STORE, VERSI CHARYN MARKET ===
 def get_saldo_embed(user):
     embed = discord.Embed(color=PINK_SALDO)
-    embed.title = "💳 INFORMASI SALDO / TOTAL TRANSAKSI"
+    embed.title = "💳 INFORMASI SALDO / TOTAL TRANSAKSI ✨"
     embed.description = (
         f"Halo {user.mention},\n"
         f"berikut adalah rincian total transaksi atau saldo belanja kamu di **CHARYN MARKET:**\n\n"
-        f"💰 **Total Belanja:** Rp 0"
+        f"💰 **Total Belanja:** Rp 0\n"
+        f"📦 **Total Robux:** 0 R$\n"
+        f"🧾 **Total Transaksi:** 0x\n\n"
+        f"CHARYN MARKET • CHECK SALDO"
     )
-    embed.set_footer(text="CHARYN MARKET • CHECK SALDO")
+    embed.set_footer(text="Charyn Market • Rafi Store")
     return embed
 
 async def create_ticket(interaction):
@@ -57,7 +61,6 @@ async def create_ticket(interaction):
     category = get_ticket_category(guild)
     channel = await guild.create_text_channel(name=f"ticket-{ticket_counter}-{interaction.user.name}", overwrites=overwrites, category=category)
     ticket_data[channel.id] = {"user_id": interaction.user.id, "username": interaction.user.name, "created_at": time.time(), "last_activity": time.time(), "number": ticket_counter}
-    # === INI BARIS NICKNAME NYA, UDAH ADA DI SINI ===
     embed = discord.Embed(title=f"🎫 Ticket Baru - {interaction.user.name}", description=f"**Ticket #{ticket_counter}**\n\nHalo {interaction.user.mention}!\n\nSilahkan ketik disini ya:\n**Nickname Roblox:**\n**Username Roblox:**\n**Paket yang mau dibeli:**\n\nLalu scan QRIS dibawah & kirim bukti pembayaran disini ya 💙", color=BLUE)
     await channel.send(f"{interaction.user.mention} Halo! Selamat datang di CHARYN MARKET! 🌸", embed=embed, view=CloseView())
     embed_qris = discord.Embed(title="💳 Scan QRIS Disini", description="Silahkan scan QRIS ini untuk pembayaran ya 💙\n\nBisa bayar via Bank / GoPay / OVO / DANA / ShopeePay!\nKirim bukti transfer nya disini!", color=BLUE)
@@ -69,6 +72,13 @@ class CloseView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
     @discord.ui.button(label="🔒 CLOSE TICKET", style=discord.ButtonStyle.danger, custom_id="close_ticket_charyn")
     async def close_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        is_owner = interaction.user.id == interaction.guild.owner_id
+        is_admin_perm = interaction.user.guild_permissions.administrator
+        role_names = [r.name.lower() for r in interaction.user.roles]
+        is_admin_role = any(x in role_names for x in ["admin", "owner", "staff", "moderator", "adm"])
+        if not (is_owner or is_admin_perm or is_admin_role):
+            await interaction.response.send_message("❌ Hanya **Admin & Owner** yang bisa menutup ticket ini!", ephemeral=True)
+            return
         await interaction.response.defer(ephemeral=True)
         channel = interaction.channel; data = ticket_data.get(channel.id)
         if not data:
