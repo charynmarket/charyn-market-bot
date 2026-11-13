@@ -2,8 +2,6 @@ import discord
 from discord.ext import commands, tasks
 import os
 import time
-import re
-import asyncio
 from datetime import datetime
 
 intents = discord.Intents.default()
@@ -12,30 +10,15 @@ intents.members = True
 intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# === QRIS BARU CHARYN MARKET - UDAH KEPASANG ===
 QRIS_URL = "https://raw.githubusercontent.com/charynmarket/charyn-market-bot/main/lv_0_20261112135233.jpeg"
 
 ticket_data = {}
 ticket_counter = 0
 
-def get_status_channel(guild):
-    for ch in guild.text_channels:
-        if "order-status" in ch.name.lower(): return ch
-    for ch in guild.text_channels:
-        if "ticket-order" in ch.name.lower(): return ch
-    return None
-
 def get_ticket_category(guild):
     for cat in guild.categories:
         if "TIKET" in cat.name.upper() or "TICKET" in cat.name.upper(): return cat
     return None
-
-async def send_status_update(guild, number, username, user_id, paket, status_text, color):
-    ch = get_status_channel(guild)
-    if not ch: return
-    embed = discord.Embed(title=f"📦 Order Status - Ticket #{number}", description=f"**Customer:** <@{user_id}> ({username})\n**Paket:** {paket}\n**Status:** {status_text}", color=color)
-    embed.set_footer(text="CHARYN MARKET • Order Status")
-    await ch.send(embed=embed)
 
 async def do_close(guild, channel, data, admin_user=None):
     if channel.id in ticket_data: del ticket_data[channel.id]
@@ -51,36 +34,6 @@ async def check_inactive():
             ch = bot.get_channel(channel_id)
             if not ch: del ticket_data[channel_id]; continue
             await do_close(ch.guild, ch, data)
-
-class StatusView(discord.ui.View):
-    def __init__(self): super().__init__(timeout=None)
-    @discord.ui.button(label="⏳ Menunggu Pembayaran", style=discord.ButtonStyle.secondary, custom_id="status_waiting_charyn")
-    async def waiting(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer(ephemeral=True)
-        if interaction.user.id != interaction.guild.owner_id:
-            await interaction.followup.send("❌ Hanya **Owner** yang bisa update status!", ephemeral=True); return
-        data = ticket_data.get(interaction.channel.id, {})
-        if data: data["last_activity"] = time.time()
-        await interaction.followup.send("⏳ Status diubah: **Menunggu Pembayaran**")
-        await send_status_update(interaction.guild, data.get("number", "?"), data.get("username", interaction.user.name), data.get("user_id", interaction.user.id), data.get("paket", "ORDER ROBUX"), "⏳ Menunggu Pembayaran", 0xfee75c)
-    @discord.ui.button(label="🔄 Diproses", style=discord.ButtonStyle.primary, custom_id="status_process_charyn")
-    async def process(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer(ephemeral=True)
-        if interaction.user.id != interaction.guild.owner_id:
-            await interaction.followup.send("❌ Hanya **Owner** yang bisa update status!", ephemeral=True); return
-        data = ticket_data.get(interaction.channel.id, {})
-        if data: data["last_activity"] = time.time()
-        await interaction.followup.send("🔄 Status diubah: **Sedang Diproses**")
-        await send_status_update(interaction.guild, data.get("number", "?"), data.get("username", interaction.user.name), data.get("user_id", interaction.user.id), data.get("paket", "ORDER ROBUX"), "🔄 Sedang Diproses", 0x5865f2)
-    @discord.ui.button(label="✅ Selesai", style=discord.ButtonStyle.success, custom_id="status_done_charyn")
-    async def done(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer(ephemeral=True)
-        if interaction.user.id != interaction.guild.owner_id:
-            await interaction.followup.send("❌ Hanya **Owner** yang bisa update status!", ephemeral=True); return
-        data = ticket_data.get(interaction.channel.id, {})
-        if data: data["last_activity"] = time.time()
-        await interaction.followup.send("✅ Status diubah: **Selesai** - Robux sudah masuk!")
-        await send_status_update(interaction.guild, data.get("number", "?"), data.get("username", interaction.user.name), data.get("user_id", interaction.user.id), data.get("paket", "ORDER ROBUX"), "✅ Selesai / Done", 0x57f287)
 
 class CloseView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
@@ -121,8 +74,6 @@ class OrderModal(discord.ui.Modal, title="Pesanan Robux - CHARYN MARKET"):
         embed_qris = discord.Embed(title="💳 Scan QRIS Disini", description="Silahkan scan QRIS ini untuk pembayaran ya 💗\n\nBisa bayar via Bank / GoPay / OVO / DANA / ShopeePay!\nKirim bukti transfer nya disini!", color=0xff69b4)
         embed_qris.set_image(url=QRIS_URL)
         await channel.send(embed=embed_qris)
-        await channel.send("**📦 STATUS ORDER - Owner only:**", view=StatusView())
-        await send_status_update(guild, ticket_counter, interaction.user.name, interaction.user.id, self.paket.value, "🆕 Ticket Baru Dibuat", 0xff69b4)
         go_view = discord.ui.View()
         go_view.add_item(discord.ui.Button(label="🚀 BUKA TICKET SAYA", style=discord.ButtonStyle.link, url=f"https://discord.com/channels/{guild.id}/{channel.id}"))
         await interaction.response.send_message(f"✅ Ticket kamu sudah dibuat!\nPencet tombol dibawah untuk langsung masuk ke ticket kamu 👇\n👉 {channel.mention}", view=go_view, ephemeral=True)
@@ -144,7 +95,7 @@ async def on_message(message):
 @bot.event
 async def on_ready():
     print(f"Login {bot.user} - CHARYN MARKET")
-    bot.add_view(OrderView()); bot.add_view(CloseView()); bot.add_view(StatusView()); bot.add_view(SaldoView())
+    bot.add_view(OrderView()); bot.add_view(CloseView()); bot.add_view(SaldoView())
     if not check_inactive.is_running(): check_inactive.start()
     await bot.tree.sync()
 
@@ -153,7 +104,8 @@ async def ticket(interaction: discord.Interaction):
     embed1 = discord.Embed(title="Charyn Market - Order Robux 💗", description="🌸 **ROBUX VIA USERNAME**\nFast Process • Aman • Instan\n\nSyarat top up via username:\n>> SUDAH 18+\n>> SUDAH TERVERIFIKASI 2 LANGKAH", color=0xff69b4)
     embed2 = discord.Embed(title="💰 ROBUX FAST SEND - CHARYN MARKET", description="🌸 **Robux Via Username - READY! ✅**\n\n🛒 **Cara Order**\nClick tombol ORDER ROBUX dibawah, isi formulir, lalu scan QRIS dibawah & tunggu admin. Pembayaran **hanya QRIS**.", color=0xff69b4)
     embed2.set_image(url=QRIS_URL)
-    embed2.set_footer(text="Charyn Market")
+    # === CUMA INI YANG DIGANTI JADI by MIPI STORE ===
+    embed2.set_footer(text="by MIPI STORE")
     await interaction.response.send_message(embed=embed1)
     await interaction.followup.send(embed=embed2, view=OrderView())
 
