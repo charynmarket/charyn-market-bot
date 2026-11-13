@@ -12,8 +12,9 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 QRIS_URL = "https://raw.githubusercontent.com/charynmarket/charyn-market-bot/main/lv_0_20261112135233.jpeg"
 
-# === WARNA BIRU ===
+# === WARNA ===
 BLUE = 0x3498db
+PINK_SALDO = 0xff2d95  # Pink persis kaya di SS Aylin Store
 
 ticket_data = {}
 ticket_counter = 0
@@ -38,6 +39,18 @@ async def check_inactive():
             if not ch: del ticket_data[channel_id]; continue
             await do_close(ch.guild, ch, data)
 
+# === FUNGSI EMBED SALDO PERSIS SS ===
+def get_saldo_embed(user):
+    embed = discord.Embed(color=PINK_SALDO)
+    embed.title = "💳 INFORMASI SALDO / TOTAL TRANSAKSI"
+    embed.description = (
+        f"Halo {user.mention},\n"
+        f"berikut adalah rincian total transaksi atau saldo belanja kamu di **CHARYN MARKET:**\n\n"
+        f"💰 **Total Belanja:** Rp 0"
+    )
+    embed.set_footer(text="CHARYN MARKET • CHECK SALDO")
+    return embed
+
 class CloseView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
     @discord.ui.button(label="🔒 CLOSE TICKET", style=discord.ButtonStyle.danger, custom_id="close_ticket_charyn")
@@ -55,10 +68,7 @@ class SaldoView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
     @discord.ui.button(label="💳 CEK SALDO SAYA", style=discord.ButtonStyle.primary, custom_id="cek_saldo_charyn")
     async def cek_saldo(self, interaction: discord.Interaction, button: discord.ui.Button):
-        embed = discord.Embed(color=BLUE)
-        embed.description = f"💳 **INFORMASI SALDO / TOTAL TRANSAKSI** ✨\n\nHalo {interaction.user.mention},\n\nSilahkan chat Owner untuk cek total belanja kamu di **CHARYN MARKET** ya 💙\n\nCHARYN MARKET • CHECK SALDO"
-        embed.set_footer(text="Charyn Market")
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(embed=get_saldo_embed(interaction.user), ephemeral=True)
 
 class OrderModal(discord.ui.Modal, title="Pesanan Robux - CHARYN MARKET"):
     username = discord.ui.TextInput(label="Username Roblox", placeholder="UsernameRoblox", required=True)
@@ -113,10 +123,11 @@ async def ticket(interaction: discord.Interaction):
 
 @bot.tree.command(name="saldo", description="Cek saldo kamu di CHARYN MARKET")
 async def saldo_slash(interaction: discord.Interaction):
-    embed = discord.Embed(color=BLUE)
-    embed.description = f"💳 **INFORMASI SALDO / TOTAL TRANSAKSI** ✨\n\nHalo {interaction.user.mention},\n\nSilahkan chat Owner untuk cek total belanja kamu di **CHARYN MARKET** ya 💙\n\nCHARYN MARKET • CHECK SALDO"
-    embed.set_footer(text="Charyn Market")
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    await interaction.response.send_message(embed=get_saldo_embed(interaction.user), ephemeral=True)
+
+@bot.command(name="saldo")
+async def saldo_prefix(ctx):
+    await ctx.send(embed=get_saldo_embed(ctx.author), delete_after=30)
 
 @bot.tree.command(name="setup-saldo", description="Kirim panel cek saldo (Owner only)")
 async def setup_saldo(interaction: discord.Interaction):
