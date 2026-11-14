@@ -162,11 +162,11 @@ async def on_ready():
 
 @bot.tree.command(name="ticket", description="Tampilkan panel order CHARYN MARKET")
 async def ticket(interaction: discord.Interaction):
-    # 1. JADI SATU - TEKS + FOTO NYATU
-    embed1 = discord.Embed(title="Charyn Market - Order Robux 💙", description="🌸 **ROBUX VIA USERNAME**\n⚡ Fast Process • 🛡️ Aman • ✨ Instan\n\nSyarat top up via username:\n>> 🔞 SUDAH 18+\n>> ✅ SUDAH TERVERIFIKASI 2 LANGKAH", color=BLUE)
+    # 1. CUMA FOTO AJA - TEKS ATAS DIHAPUS SEMUA
+    embed1 = discord.Embed(color=BLUE)
     embed1.set_image(url=BANNER_URL)
 
-    # 2. PRICELIST BARU - UDAH MASUK KODE
+    # 2. PRICELIST - GA DI APA-APAIN, TETEP KAYA KEMARIN
     embed2 = discord.Embed(
         title="📊 PRICELIST ROBUX CLEAN VIA USERNAME 💎",
         description=(
