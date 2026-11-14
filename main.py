@@ -12,7 +12,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 QRIS_URL = "https://raw.githubusercontent.com/charynmarket/charyn-market-bot/main/lv_0_20261112135233.jpeg"
 
-# FOTO BANNER ATAS
+# FOTO BANNER
 BANNER_URL = "https://raw.githubusercontent.com/charynmarket/charyn-market-bot/main/0a1fb8b8-aa93-4433-bee4-f3e933a9c5cd.jpeg"
 
 BLUE = 0x3498db
@@ -71,7 +71,7 @@ async def create_ticket(interaction, nickname="-", username_roblox="-", paket="-
     embed = discord.Embed(title=f"🎫 Ticket Baru - {interaction.user.name}", description=f"**Ticket #{ticket_counter}**\n\nHalo {interaction.user.mention}!\n\n**📝 Pesanan Robux:**\n**Nickname Roblox:** {nickname}\n**Username Roblox:** {username_roblox}\n**Paket yang dipilih:** {paket}\n**Metode Pembayaran:** {metode}\n\nLalu scan QRIS dibawah & kirim bukti pembayaran disini ya 💙", color=BLUE)
     embed.set_image(url=BANNER_URL)
     await channel.send(f"{interaction.user.mention} Halo! Selamat datang di CHARYN MARKET! 🌸", embed=embed, view=CloseView())
-    # QR CUMA DI SINI - DI DALAM TICKET AJA
+    # QR CUMA DI DALAM TICKET AJA
     embed_qris = discord.Embed(title="💳 Scan QRIS Disini", description="Silahkan scan QRIS ini untuk pembayaran ya 💙\n\nBisa bayar via Bank / GoPay / OVO / DANA / ShopeePay!\nKirim bukti transfer nya disini!", color=BLUE)
     embed_qris.set_image(url=QRIS_URL)
     await channel.send(embed=embed_qris)
@@ -120,14 +120,14 @@ async def on_ready():
 
 @bot.tree.command(name="ticket", description="Tampilkan panel order CHARYN MARKET")
 async def ticket(interaction: discord.Interaction):
-    # 1. FOTO BANNER DI ATAS
+    # 1. PANEL UTAMA DI ATAS - 2 LANGKAH
+    embed1 = discord.Embed(title="Charyn Market - Order Robux 💙", description="🌸 **ROBUX VIA USERNAME**\nFast Process • Aman • Instan\n\nSyarat top up via username:\n>> SUDAH 18+\n>> SUDAH TERVERIFIKASI 2 LANGKAH", color=BLUE)
+
+    # 2. FOTO BANNER DI BAWAH 2 LANGKAH
     embed_banner = discord.Embed(color=BLUE)
     embed_banner.set_image(url=BANNER_URL)
 
-    # 2. PANEL UTAMA
-    embed1 = discord.Embed(title="Charyn Market - Order Robux 💙", description="🌸 **ROBUX VIA USERNAME**\nFast Process • Aman • Instan\n\nSyarat top up via username:\n>> SUDAH 18+\n>> SUDAH TERVERIFIKASI 2 LANGKAH", color=BLUE)
-
-    # 3. PRICELIST - QR SUDAH DIHAPUS DARI SINI!
+    # 3. PRICELIST PALING BAWAH - TANPA QR
     embed2 = discord.Embed(
         title="*PRICELIST ROBUX CLEAN VIA USN FAST SEND*",
         description=(
@@ -149,11 +149,11 @@ async def ticket(interaction: discord.Interaction):
         ),
         color=BLUE
     )
-    # LABEL KECIL PALING BAWAH - BUKTI KAMU YANG BUAT
     embed2.set_footer(text="projek By mipi store")
 
-    await interaction.response.send_message(embed=embed_banner)
-    await interaction.followup.send(embed=embed1)
+    # KIRIM SESUAI URUTAN BARU
+    await interaction.response.send_message(embed=embed1)
+    await interaction.followup.send(embed=embed_banner)
     await interaction.followup.send(embed=embed2, view=OrderView())
 
 @bot.tree.command(name="saldo", description="Cek saldo kamu di CHARYN MARKET")
