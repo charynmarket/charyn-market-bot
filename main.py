@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 import os
 import time
 from datetime import datetime
@@ -11,6 +11,9 @@ intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 QRIS_URL = "https://raw.githubusercontent.com/charynmarket/charyn-market-bot/main/lv_0_20261112135233.jpeg"
+
+# FOTO BANNER ATAS
+BANNER_URL = "https://raw.githubusercontent.com/charynmarket/charyn-market-bot/main/0a1fb8b8-aa93-4433-bee4-f3e933a9c5cd.jpeg"
 
 BLUE = 0x3498db
 PINK_SALDO = 0xff2d95
@@ -27,16 +30,6 @@ async def do_close(guild, channel, data, admin_user=None):
     if channel.id in ticket_data: del ticket_data[channel.id]
     try: await channel.delete()
     except: pass
-
-@tasks.loop(minutes=1)
-async def check_inactive():
-    now = time.time()
-    for channel_id, data in list(ticket_data.items()):
-        last = data.get("last_activity", data["created_at"])
-        if now - last > 15*60:
-            ch = bot.get_channel(channel_id)
-            if not ch: del ticket_data[channel_id]; continue
-            await do_close(ch.guild, ch, data)
 
 def get_saldo_embed(user):
     embed = discord.Embed(color=PINK_SALDO)
@@ -74,9 +67,11 @@ async def create_ticket(interaction, nickname="-", username_roblox="-", paket="-
     overwrites = {guild.default_role: discord.PermissionOverwrite(read_messages=False), interaction.user: discord.PermissionOverwrite(read_messages=True, send_messages=True), guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)}
     category = get_ticket_category(guild)
     channel = await guild.create_text_channel(name=f"ticket-{ticket_counter}-{interaction.user.name}", overwrites=overwrites, category=category)
-    ticket_data[channel.id] = {"user_id": interaction.user.id, "username": interaction.user.name, "created_at": time.time(), "last_activity": time.time(), "number": ticket_counter}
+    ticket_data[channel.id] = {"user_id": interaction.user.id, "username": interaction.user.name, "created_at": time.time(), "number": ticket_counter}
     embed = discord.Embed(title=f"🎫 Ticket Baru - {interaction.user.name}", description=f"**Ticket #{ticket_counter}**\n\nHalo {interaction.user.mention}!\n\n**📝 Pesanan Robux:**\n**Nickname Roblox:** {nickname}\n**Username Roblox:** {username_roblox}\n**Paket yang dipilih:** {paket}\n**Metode Pembayaran:** {metode}\n\nLalu scan QRIS dibawah & kirim bukti pembayaran disini ya 💙", color=BLUE)
+    embed.set_image(url=BANNER_URL)
     await channel.send(f"{interaction.user.mention} Halo! Selamat datang di CHARYN MARKET! 🌸", embed=embed, view=CloseView())
+    # QR CUMA DI SINI - DI DALAM TICKET AJA
     embed_qris = discord.Embed(title="💳 Scan QRIS Disini", description="Silahkan scan QRIS ini untuk pembayaran ya 💙\n\nBisa bayar via Bank / GoPay / OVO / DANA / ShopeePay!\nKirim bukti transfer nya disini!", color=BLUE)
     embed_qris.set_image(url=QRIS_URL)
     await channel.send(embed=embed_qris)
@@ -86,16 +81,13 @@ class CloseView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
     @discord.ui.button(label="🔒 CLOSE TICKET", style=discord.ButtonStyle.danger, custom_id="close_ticket_charyn")
     async def close_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # === OWNER + ADMIN BISA CLOSE, MEMBER GAK BISA ===
         is_owner = interaction.user.id == interaction.guild.owner_id
         is_admin_perm = interaction.user.guild_permissions.administrator
         role_names = [r.name.lower() for r in interaction.user.roles]
         is_admin_role = any(x in role_names for x in ["admin", "owner", "staff", "moderator", "adm"])
-
         if not (is_owner or is_admin_perm or is_admin_role):
             await interaction.response.send_message("❌ Hanya **Admin & Owner** yang bisa menutup ticket ini!", ephemeral=True)
             return
-
         await interaction.response.defer(ephemeral=True)
         channel = interaction.channel; data = ticket_data.get(channel.id)
         if not data:
@@ -118,23 +110,50 @@ class OrderView(discord.ui.View):
 @bot.event
 async def on_message(message):
     if message.author.bot: return
-    if message.channel.id in ticket_data: ticket_data[message.channel.id]["last_activity"] = time.time()
     await bot.process_commands(message)
 
 @bot.event
 async def on_ready():
     print(f"Login {bot.user} - CHARYN MARKET")
     bot.add_view(OrderView()); bot.add_view(CloseView()); bot.add_view(SaldoView())
-    if not check_inactive.is_running(): check_inactive.start()
     await bot.tree.sync()
 
 @bot.tree.command(name="ticket", description="Tampilkan panel order CHARYN MARKET")
 async def ticket(interaction: discord.Interaction):
+    # 1. FOTO BANNER DI ATAS
+    embed_banner = discord.Embed(color=BLUE)
+    embed_banner.set_image(url=BANNER_URL)
+
+    # 2. PANEL UTAMA
     embed1 = discord.Embed(title="Charyn Market - Order Robux 💙", description="🌸 **ROBUX VIA USERNAME**\nFast Process • Aman • Instan\n\nSyarat top up via username:\n>> SUDAH 18+\n>> SUDAH TERVERIFIKASI 2 LANGKAH", color=BLUE)
-    embed2 = discord.Embed(title="💰 ROBUX FAST SEND - CHARYN MARKET", description="🌸 **Robux Via Username - READY! ✅**\n\n🛒 **Cara Order**\nClick tombol ORDER ROBUX dibawah, ticket langsung kebuka & ketik pesanan kamu disana. Pembayaran **hanya QRIS**.", color=BLUE)
-    embed2.set_image(url=QRIS_URL)
+
+    # 3. PRICELIST - QR SUDAH DIHAPUS DARI SINI!
+    embed2 = discord.Embed(
+        title="*PRICELIST ROBUX CLEAN VIA USN FAST SEND*",
+        description=(
+            "`⏣ 100 RBX `      =  `16.000`\n"
+            "`⏣ 200 RBX `      =  `32.000`\n"
+            "`⏣ 300 RBX `      =  `48.000`\n"
+            "`⏣ 400 RBX `      =  `64.000`\n"
+            "`⏣ 500 RBX `      =  `75.000`\n"
+            "`⏣ 1.000 RBX ` = `150.000`\n"
+            "`⏣ 1.500 RBX ` = `225.000`\n"
+            "`⏣ 2.000 RBX ` = `300.000`\n"
+            "`⏣ 2.500 RBX ` = `375.000`\n"
+            "`⏣ 3.000 RBX ` = `450.000`\n"
+            "*DAN SETERUSNYA*\n\n"
+            "*NOTE:*\n"
+            "> UNTUK ORDER KLIK DIBAWAH BACAAN NYA \" ORDER ROBUX \"\n\n"
+            "> SEGALA KESALAHAN PADA BUYER TIDAK MENJADI TANGGUNG JAWAB ADMIN\n\n"
+            "> PASTIKAN USERNAME DAN NICKNAME DI ISI DENGAN BENAR YA!!"
+        ),
+        color=BLUE
+    )
+    # LABEL KECIL PALING BAWAH - BUKTI KAMU YANG BUAT
     embed2.set_footer(text="projek By mipi store")
-    await interaction.response.send_message(embed=embed1)
+
+    await interaction.response.send_message(embed=embed_banner)
+    await interaction.followup.send(embed=embed1)
     await interaction.followup.send(embed=embed2, view=OrderView())
 
 @bot.tree.command(name="saldo", description="Cek saldo kamu di CHARYN MARKET")
