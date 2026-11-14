@@ -120,14 +120,11 @@ async def on_ready():
 
 @bot.tree.command(name="ticket", description="Tampilkan panel order CHARYN MARKET")
 async def ticket(interaction: discord.Interaction):
-    # 1. PANEL UTAMA DI ATAS - 2 LANGKAH
+    # 1. JADI SATU - TEKS + FOTO NYATU DALAM 1 EMBED
     embed1 = discord.Embed(title="Charyn Market - Order Robux 💙", description="🌸 **ROBUX VIA USERNAME**\nFast Process • Aman • Instan\n\nSyarat top up via username:\n>> SUDAH 18+\n>> SUDAH TERVERIFIKASI 2 LANGKAH", color=BLUE)
+    embed1.set_image(url=BANNER_URL) # FOTO LANGSUNG DI BAWAH 2 LANGKAH, MASIH 1 EMBED
 
-    # 2. FOTO BANNER DI BAWAH 2 LANGKAH
-    embed_banner = discord.Embed(color=BLUE)
-    embed_banner.set_image(url=BANNER_URL)
-
-    # 3. PRICELIST PALING BAWAH - TANPA QR
+    # 2. PRICELIST DIPISAH SENDIRI
     embed2 = discord.Embed(
         title="*PRICELIST ROBUX CLEAN VIA USN FAST SEND*",
         description=(
@@ -151,9 +148,8 @@ async def ticket(interaction: discord.Interaction):
     )
     embed2.set_footer(text="projek By mipi store")
 
-    # KIRIM SESUAI URUTAN BARU
+    # KIRIM CUMA 2 PESAN AJA
     await interaction.response.send_message(embed=embed1)
-    await interaction.followup.send(embed=embed_banner)
     await interaction.followup.send(embed=embed2, view=OrderView())
 
 @bot.tree.command(name="saldo", description="Cek saldo kamu di CHARYN MARKET")
